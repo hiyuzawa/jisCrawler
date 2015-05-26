@@ -5,6 +5,7 @@ use LWP::UserAgent;
 use Data::Dumper;
 use utf8;
 binmode(STDOUT, ":utf8");
+$| = 1;
 
 my $DIR = "http://dir.yahoo.co.jp";
 my $japan_html = get($DIR . "/Regional/Japanese_Regions/");
@@ -46,15 +47,19 @@ foreach my $pref (@pref_list) {
 
         $i->{city_nearby} = \@nearby;
 
-        my ($gov_hp, $gov_hp_title);
+        my ($gov_hp, $gov_hp_title, $gov_tw);
         my $gov_html = get($DIR . $city_baseurl . "Government/Office/");
         if($gov_html =~ m|<div class="site_list" id="ofclsite">.+?<th>.+?</th>.+?<td>.+?<a.+?href="(.+?)".+?>(.+?)</a>|s) {
             $gov_hp = $1;
             $gov_hp_title = $2;
         }
+        if($gov_html =~ m|href="http://twitter.com/(.+?)"|) {
+            $gov_tw = $1;
+        }
 
         $i->{gov_hp} = $gov_hp;
         $i->{gov_hp_title} = $gov_hp_title;
+        $i->{gov_tw} = $gov_tw || "";
 
         my ($jiscode, $lat, $lon);
         if ($city_html =~ m|(http://weather.yahoo.co.jp/weather/jp/.+/.+/.+?\.html)|) {
@@ -86,7 +91,6 @@ foreach my $pref (@pref_list) {
 
         print_line($i);
     }
-    exit;
 }
 
 
@@ -103,9 +107,9 @@ sub print_line {
         $i->{lon},
         $i->{gov_hp},
         $i->{gov_hp_title},
+        $i->{gov_tw},
         join(",", @{$i->{city_nearby}})
         );
     print "\n";
-    sleep 1;
-
+#    sleep 1;
 }
